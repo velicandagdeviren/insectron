@@ -247,7 +247,9 @@ export const db = {
         .single();
       if (error) {
         console.error("Supabase insert error:", error);
-        return { success: false, error: error.message };
+        const urlInfo = `URL: ${import.meta.env.VITE_SUPABASE_URL || "undefined"}`;
+        const keyInfo = `Key: ${import.meta.env.VITE_SUPABASE_ANON_KEY ? (import.meta.env.VITE_SUPABASE_ANON_KEY.substring(0, 10) + "...") : "undefined"}`;
+        return { success: false, error: `${error.message} (${urlInfo}, ${keyInfo})` };
       }
       if (!data) {
         return { success: false, error: "Veri kaydedilemedi ama hata dönmedi." };
@@ -266,7 +268,9 @@ export const db = {
       };
     } catch (e: any) {
       console.error("addLead exception:", e);
-      return { success: false, error: e.message || String(e) };
+      const urlInfo = `URL: ${import.meta.env.VITE_SUPABASE_URL || "undefined"}`;
+      const keyInfo = `Key: ${import.meta.env.VITE_SUPABASE_ANON_KEY ? (import.meta.env.VITE_SUPABASE_ANON_KEY.substring(0, 10) + "...") : "undefined"}`;
+      return { success: false, error: `${e.message || String(e)} (${urlInfo}, ${keyInfo})` };
     }
   },
 
