@@ -238,22 +238,36 @@ export const db = {
     }));
   },
 
-  async addLead(lead: Omit<Lead, "id" | "status" | "createdAt">): Promise<Lead | null> {
-    const { data, error } = await supabase
-      .from("leads")
-      .insert([{ ...lead, status: "Yeni" }])
-      .select()
-      .single();
-    if (error) { console.error(error); return null; }
-    return {
-      id: data.id,
-      name: data.name,
-      phone: data.phone,
-      service: data.service,
-      message: data.message,
-      status: data.status,
-      createdAt: data.created_at,
-    };
+  async addLead(lead: Omit<Lead, "id" | "status" | "createdAt">): Promise<{ success: boolean; data?: Lead; error?: string }> {
+    try {
+      const { data, error } = await supabase
+        .from("leads")
+        .insert([{ ...lead, status: "Yeni" }])
+        .select()
+        .single();
+      if (error) {
+        console.error("Supabase insert error:", error);
+        return { success: false, error: error.message };
+      }
+      if (!data) {
+        return { success: false, error: "Veri kaydedilemedi ama hata dönmedi." };
+      }
+      return {
+        success: true,
+        data: {
+          id: data.id,
+          name: data.name,
+          phone: data.phone,
+          service: data.service,
+          message: data.message,
+          status: data.status,
+          createdAt: data.created_at,
+        },
+      };
+    } catch (e: any) {
+      console.error("addLead exception:", e);
+      return { success: false, error: e.message || String(e) };
+    }
   },
 
   async updateLeadStatus(id: string, status: Lead["status"]): Promise<boolean> {

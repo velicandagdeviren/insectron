@@ -741,11 +741,11 @@ function Contact() {
 
     const result = await db.addLead({ name, phone, service, message });
     setSending(false);
-    if (result) {
+    if (result.success) {
       (e.target as HTMLFormElement).reset();
       toast.success("Talebiniz alındı. En kısa sürede size döneceğiz.");
     } else {
-      toast.error("Bir hata oluştu, lütfen tekrar deneyin.");
+      toast.error(`Hata oluştu: ${result.error || "Bilinmeyen bir hata"}`);
     }
   }
   return (
