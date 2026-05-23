@@ -32,6 +32,7 @@ import {
   WHATSAPP,
 } from "@/components/site-chrome";
 import { toast } from "sonner";
+import { db } from "@/lib/db";
 
 export const Route = createFileRoute("/")({
   component: HomePage,
@@ -229,18 +230,22 @@ function Marquee() {
 
 /* ───────── SERVICES ───────── */
 
-const SERVICES = [
-  { icon: Rat, title: "Fare ve sıçan", short: "Apartman aralarına, depolara, restoran arka mutfaklarına özel köşe çözümleri.", details: ["Yem istasyonu ve takip", "Bina geneli koordinasyon", "Mevsimsel önleyici bakım"] },
-  { icon: Bug, title: "Hamamböceği", short: "Jel yöntemi ile yumurtaya kadar etkili; mutfakta koku, leke bırakmaz.", details: ["Mutfak ve banyo odaklı", "Kokusuz jel uygulama", "10 gün içinde tamamen biter"] },
-  { icon: SprayCan, title: "Karınca, pire, tahtakurusu", short: "Eve ya da işyerine göre seçilmiş, çocuk ve evcil hayvana uygun ürünler.", details: ["Çocuk & evcil dostu ürün", "Yatak odası için özel program", "Aynı gün uygulama"] },
-  { icon: Home, title: "Apartman dezenfeksiyonu", short: "Site yönetimleri için periyodik bakım planları, raporlu ve sertifikalı.", details: ["3, 6 ve 12 aylık planlar", "Sakinlere bilgilendirme", "Resmi belge ve rapor"] },
-  { icon: Building2, title: "İşyeri ve restoran", short: "Belediye denetimlerine uygun belge ve aylık takip; mesai dışı uygulama.", details: ["HACCP uyumlu süreç", "Mesai dışı çalışma", "Aylık denetim raporu"] },
-  { icon: Siren, title: "Acil gece servisi", short: "Çok geç değil; gece ararsanız sabah ilk işimiz size geliyoruz.", details: ["Telefon hattı her zaman açık", "Esenyurt'a 30 dk", "Hafta sonu farkı yok"] },
-];
+const iconMap: Record<string, React.ComponentType<any>> = {
+  Rat,
+  Bug,
+  SprayCan,
+  Building2,
+  Home,
+  Siren,
+};
 
 function Services() {
+  const [services] = useState(() => db.getServices());
   const [active, setActive] = useState(0);
-  const s = SERVICES[active];
+  const s = services[active];
+  
+  if (!s) return null;
+
   return (
     <section id="services" className="relative py-24 md:py-32">
       <div className="container mx-auto px-4">
@@ -252,15 +257,16 @@ function Services() {
               <br />Çözüm de öyle olmalı.
             </h2>
           </div>
-          <div className="text-sm text-muted-foreground">{String(active + 1).padStart(2, "0")} / {String(SERVICES.length).padStart(2, "0")}</div>
+          <div className="text-sm text-muted-foreground">{String(active + 1).padStart(2, "0")} / {String(services.length).padStart(2, "0")}</div>
         </div>
 
         <div className="mt-14 grid lg:grid-cols-12 gap-6 lg:gap-10">
           <ul className="lg:col-span-5 flex flex-col">
-            {SERVICES.map((it, i) => {
+            {services.map((it, i) => {
               const isActive = i === active;
+              const IconComponent = iconMap[it.iconName] || Bug;
               return (
-                <li key={it.title}>
+                <li key={it.id || it.title}>
                   <button
                     onClick={() => setActive(i)}
                     className={`group w-full text-left flex items-center gap-4 py-5 border-t border-border last:border-b transition-colors ${
@@ -270,7 +276,7 @@ function Services() {
                     <span className={`font-display text-sm w-8 ${isActive ? "accent-text" : "text-muted-foreground"}`}>
                       {String(i + 1).padStart(2, "0")}
                     </span>
-                    <it.icon className={`h-5 w-5 shrink-0 ${isActive ? "text-accent" : "text-foreground/40"}`} />
+                    <IconComponent className={`h-5 w-5 shrink-0 ${isActive ? "text-accent" : "text-foreground/40"}`} />
                     <span className="font-display text-2xl md:text-3xl flex-1">{it.title}</span>
                     <ArrowUpRight
                       className={`h-5 w-5 transition-all duration-300 ${
@@ -292,14 +298,17 @@ function Services() {
           >
             <div className="flex items-start justify-between">
               <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/8 text-primary border border-primary/15">
-                <s.icon className="h-7 w-7" />
+                {(() => {
+                  const IconComponent = iconMap[s.iconName] || Bug;
+                  return <IconComponent className="h-7 w-7" />;
+                })()}
               </div>
               <span className="text-xs uppercase tracking-[0.18em] text-muted-foreground">{String(active + 1).padStart(2, "0")}</span>
             </div>
             <h3 className="mt-7 font-display text-3xl md:text-5xl ink-text leading-[1.05]">{s.title}</h3>
             <p className="mt-4 text-foreground/75 leading-relaxed max-w-lg">{s.short}</p>
             <ul className="mt-7 space-y-3">
-              {s.details.map((d) => (
+              {s.details.map((d: string) => (
                 <li key={d} className="flex items-start gap-3 text-sm">
                   <span className="mt-1 h-1.5 w-1.5 rounded-full bg-accent shrink-0" />
                   <span className="text-foreground/80">{d}</span>
@@ -465,29 +474,23 @@ function Process() {
 
 /* ───────── REVIEWS (carousel) ───────── */
 
-const REVIEWS = [
-  { name: "Ayşe K.", role: "Esenyurt, Pınar Mah.", text: "Aylardır mutfakta fare sorunumuz vardı, iki gün içinde tamamen bitti. Çok teşekkürler." },
-  { name: "Mehmet D.", role: "Beylikdüzü", text: "Adamlar geldi, anlattılar, yaptılar, gittiler. Üç ay oldu, böcek namına bir şey görmedik." },
-  { name: "Zeynep A.", role: "Avcılar", text: "Evde küçük çocuk var diye özel ürün seçtiler. Bu detay çok kıymetli." },
-  { name: "Murat S.", role: "Restoran sahibi", text: "Aylık bakım anlaşmamız var. Belediye denetimlerinde içim rahat." },
-  { name: "Elif T.", role: "Esenyurt", text: "Gece 11'de aradım, sabah 9'da kapıdaydılar. Sözünde duran insanlar." },
-  { name: "Burak Y.", role: "Site yöneticisi", text: "Bina ortak alanlarımızı düzenli yapıyorlar. Sakinler memnun." },
-];
-
 function Reviews() {
+  const [reviews] = useState(() => db.getReviews());
   const [i, setI] = useState(0);
   const [dir, setDir] = useState(1);
-  const total = REVIEWS.length;
-  const go = (n: number) => { setDir(n > i ? 1 : -1); setI((n + total) % total); };
-  const next = () => { setDir(1); setI((i + 1) % total); };
-  const prev = () => { setDir(-1); setI((i - 1 + total) % total); };
+  const total = reviews.length;
+  const go = (n: number) => { setDir(n > i ? 1 : -1); setI((n + total) % (total || 1)); };
+  const next = () => { setDir(1); setI((i + 1) % (total || 1)); };
+  const prev = () => { setDir(-1); setI((i - 1 + total) % (total || 1)); };
 
   useEffect(() => {
+    if (total === 0) return;
     const t = setInterval(() => { setDir(1); setI((p) => (p + 1) % total); }, 6500);
     return () => clearInterval(t);
   }, [total]);
 
-  const r = REVIEWS[i];
+  if (total === 0) return null;
+  const r = reviews[i];
 
   return (
     <section id="reviews" className="relative py-24 md:py-32 bg-secondary/50">
@@ -530,7 +533,7 @@ function Reviews() {
                 className="relative max-w-3xl"
               >
                 <div className="flex">
-                  {[0,1,2,3,4].map((j) => (
+                  {Array.from({ length: r.rating || 5 }).map((_, j) => (
                     <Star key={j} className="h-4 w-4 fill-accent text-accent" />
                   ))}
                 </div>
@@ -551,7 +554,7 @@ function Reviews() {
           </div>
 
           <div className="mt-6 flex items-center justify-center gap-2">
-            {REVIEWS.map((_, j) => (
+            {reviews.map((_, j) => (
               <button
                 key={j}
                 onClick={() => go(j)}
@@ -667,22 +670,15 @@ function Emergency() {
 
 /* ───────── FAQ ───────── */
 
-const FAQS = [
-  { q: "Çocuklar ve evcil hayvanlar için tehlikeli mi?", a: "Hayır. Sağlık Bakanlığı onaylı, düşük toksisiteli ürünler kullanıyoruz. Çocuk ve evcil hayvan olan evlerde özel ürün seçiyoruz; kuruyana kadar 1-2 saat odadan uzak durmanız yeterli." },
-  { q: "İşlem ne kadar sürer?", a: "Bir daire için ortalama 30-60 dakika. Geniş işyerleri ya da site ortak alanlarında 2-3 saati bulabilir." },
-  { q: "Garanti veriyor musunuz?", a: "Evet, yazılı. Süresi içinde aynı sorun tekrarlarsa ücretsiz tekrar geliyoruz." },
-  { q: "Gece ya da hafta sonu çalışıyor musunuz?", a: "Çalışıyoruz. Restoran ve işletmeler için zaten mesai dışı tercih ediliyor." },
-  { q: "İşlem sonrası evden çıkmak gerekiyor mu?", a: "Çoğu uygulamada hayır. Sadece sisleme yöntemi yapıldıysa 2-3 saat dışarıda kalmanızı rica ediyoruz." },
-];
-
 function Faq() {
+  const [faqs] = useState(() => db.getFAQs());
   const [open, setOpen] = useState<number | null>(0);
   return (
     <section id="faq" className="relative py-24 md:py-32">
       <div className="container mx-auto px-4">
         <div className="grid lg:grid-cols-12 gap-10">
           <div className="lg:col-span-4">
-            <div className="text-xs uppercase tracking-[0.18em] text-muted-foreground">Sorular</div>
+            <div className="text-xs uppercase tracking-[0.18em] text-muted-foreground">Sorunlar</div>
             <h2 className="mt-4 font-display text-4xl md:text-5xl ink-text leading-[1.05]">
               Çoğu insan <span className="serif-italic accent-text">bunları</span> soruyor.
             </h2>
@@ -691,10 +687,10 @@ function Faq() {
             </p>
           </div>
           <div className="lg:col-span-8">
-            {FAQS.map((f, i) => {
+            {faqs.map((f, i) => {
               const isOpen = open === i;
               return (
-                <div key={f.q} className="border-b border-border">
+                <div key={f.id || f.q} className="border-b border-border">
                   <button
                     onClick={() => setOpen(isOpen ? null : i)}
                     className="w-full flex items-center justify-between gap-4 py-5 text-left"
@@ -730,10 +726,18 @@ function Contact() {
   function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setSending(true);
+
+    const formData = new FormData(e.currentTarget);
+    const name = formData.get("name") as string;
+    const phone = formData.get("phone") as string;
+    const service = formData.get("service") as string;
+    const message = formData.get("message") as string;
+
     setTimeout(() => {
+      db.addLead({ name, phone, service, message });
       setSending(false);
       (e.target as HTMLFormElement).reset();
-      toast.success("Aldık. En kısa sürede size dönüyoruz.");
+      toast.success("Talebiniz alındı. En kısa sürede size döneceğiz.");
     }, 700);
   }
   return (
