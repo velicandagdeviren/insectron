@@ -105,9 +105,9 @@ function Splash() {
 
 function Hero() {
   return (
-    <section className="relative pt-24 md:pt-28 pb-20">
+    <section className="relative pt-28 md:pt-16 pb-20">
       <div className="container mx-auto px-4">
-        <div className="grid lg:grid-cols-12 gap-10 lg:gap-14 items-end">
+        <div className="grid lg:grid-cols-12 gap-10 lg:gap-14 items-center">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -147,14 +147,20 @@ function Hero() {
             </div>
 
             <div className="mt-10 flex flex-wrap items-center gap-x-8 gap-y-3 text-sm">
-              <div className="flex items-center gap-2">
+              <a
+                href="https://www.google.com/maps/place/%C4%B0nsectron+%C4%B0la%C3%A7lama/@41.0356506,28.6649662,17z/data=!3m1!4b1!4m6!3m5!1s0x14b55f30123fda57:0x810fca881b56115!8m2!3d41.0356506!4d28.6675411!16s%2Fg%2F11xlkcllwl?entry=ttu&g_ep=EgoyMDI2MDUyMC4wIKXMDSoASAFQAw%3D%3D"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-2 hover:opacity-75 transition-opacity cursor-pointer"
+              >
                 <div className="flex">
                   {[0,1,2,3,4].map((i) => (
                     <Star key={i} className="h-4 w-4 fill-accent text-accent" />
                   ))}
                 </div>
                 <span className="text-foreground/80"><strong className="ink-text">5.0</strong> Google Puanı</span>
-              </div>
+              </a>
+
               <span className="text-muted-foreground">·</span>
               <div className="flex items-center gap-2 text-foreground/80">
                 <Clock className="h-4 w-4 text-primary" /> Hafta sonu da açığız
@@ -723,7 +729,7 @@ function Faq() {
 
 function Contact() {
   const [sending, setSending] = useState(false);
-  function onSubmit(e: React.FormEvent<HTMLFormElement>) {
+  async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setSending(true);
 
@@ -733,12 +739,14 @@ function Contact() {
     const service = formData.get("service") as string;
     const message = formData.get("message") as string;
 
-    setTimeout(() => {
-      db.addLead({ name, phone, service, message });
-      setSending(false);
+    const result = await db.addLead({ name, phone, service, message });
+    setSending(false);
+    if (result) {
       (e.target as HTMLFormElement).reset();
       toast.success("Talebiniz alındı. En kısa sürede size döneceğiz.");
-    }, 700);
+    } else {
+      toast.error("Bir hata oluştu, lütfen tekrar deneyin.");
+    }
   }
   return (
     <section id="contact" className="relative py-24 md:py-32 bg-secondary/40">

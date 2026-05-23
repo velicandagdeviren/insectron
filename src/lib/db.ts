@@ -1,3 +1,5 @@
+import { supabase } from "./supabase";
+
 export interface Lead {
   id: string;
   name: string;
@@ -218,39 +220,57 @@ function initDB() {
 initDB();
 
 export const db = {
-  // Leads
-  getLeads(): Lead[] {
-    if (typeof window === "undefined") return [];
-    return JSON.parse(localStorage.getItem("insectron_leads") || "[]");
+  // ── Leads (Supabase) ──────────────────────────────────────────
+  async getLeads(): Promise<Lead[]> {
+    const { data, error } = await supabase
+      .from("leads")
+      .select("*")
+      .order("created_at", { ascending: false });
+    if (error) { console.error(error); return []; }
+    return (data ?? []).map((r) => ({
+      id: r.id,
+      name: r.name,
+      phone: r.phone,
+      service: r.service,
+      message: r.message,
+      status: r.status,
+      createdAt: r.created_at,
+    }));
   },
 
-  addLead(lead: Omit<Lead, "id" | "status" | "createdAt">): Lead {
-    const leads = this.getLeads();
-    const newLead: Lead = {
-      ...lead,
-      id: "lead_" + Math.random().toString(36).substr(2, 9),
-      status: "Yeni",
-      createdAt: new Date().toISOString(),
+  async addLead(lead: Omit<Lead, "id" | "status" | "createdAt">): Promise<Lead | null> {
+    const { data, error } = await supabase
+      .from("leads")
+      .insert([{ ...lead, status: "Yeni" }])
+      .select()
+      .single();
+    if (error) { console.error(error); return null; }
+    return {
+      id: data.id,
+      name: data.name,
+      phone: data.phone,
+      service: data.service,
+      message: data.message,
+      status: data.status,
+      createdAt: data.created_at,
     };
-    leads.unshift(newLead);
-    localStorage.setItem("insectron_leads", JSON.stringify(leads));
-    return newLead;
   },
 
-  updateLeadStatus(id: string, status: Lead["status"]): Lead | null {
-    const leads = this.getLeads();
-    const idx = leads.findIndex((l) => l.id === id);
-    if (idx === -1) return null;
-    leads[idx].status = status;
-    localStorage.setItem("insectron_leads", JSON.stringify(leads));
-    return leads[idx];
+  async updateLeadStatus(id: string, status: Lead["status"]): Promise<boolean> {
+    const { error } = await supabase
+      .from("leads")
+      .update({ status })
+      .eq("id", id);
+    if (error) { console.error(error); return false; }
+    return true;
   },
 
-  deleteLead(id: string): boolean {
-    const leads = this.getLeads();
-    const filtered = leads.filter((l) => l.id !== id);
-    if (leads.length === filtered.length) return false;
-    localStorage.setItem("insectron_leads", JSON.stringify(filtered));
+  async deleteLead(id: string): Promise<boolean> {
+    const { error } = await supabase
+      .from("leads")
+      .delete()
+      .eq("id", id);
+    if (error) { console.error(error); return false; }
     return true;
   },
 

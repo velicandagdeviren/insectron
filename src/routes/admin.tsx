@@ -261,9 +261,13 @@ function Sidebar({ activeTab, setActiveTab, onLogout }: SidebarProps) {
 
 function DashboardTab() {
   const [leads, setLeads] = useState<Lead[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    setLeads(db.getLeads());
+    db.getLeads().then((data) => {
+      setLeads(data);
+      setLoading(false);
+    });
   }, []);
 
   const totalLeads = leads.length;
@@ -430,21 +434,28 @@ function LeadsTab() {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("Tümü");
   const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  const fetchLeads = async () => {
+    const data = await db.getLeads();
+    setLeads(data);
+    setLoading(false);
+  };
 
   useEffect(() => {
-    setLeads(db.getLeads());
+    fetchLeads();
   }, []);
 
-  const handleStatusChange = (id: string, status: Lead["status"]) => {
-    db.updateLeadStatus(id, status);
-    setLeads(db.getLeads());
+  const handleStatusChange = async (id: string, status: Lead["status"]) => {
+    await db.updateLeadStatus(id, status);
+    await fetchLeads();
     toast.success("Talep durumu güncellendi.");
   };
 
-  const handleDelete = (id: string) => {
+  const handleDelete = async (id: string) => {
     if (confirm("Bu talebi silmek istediğinizden emin misiniz?")) {
-      db.deleteLead(id);
-      setLeads(db.getLeads());
+      await db.deleteLead(id);
+      await fetchLeads();
       toast.success("Talep başarıyla silindi.");
     }
   };
