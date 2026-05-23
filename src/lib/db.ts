@@ -32,6 +32,27 @@ export interface FAQ {
   a: string;
 }
 
+export interface AboutStat {
+  n: string;
+  l: string;
+}
+
+export interface AboutValue {
+  n: string;
+  k: string;
+  v: string;
+}
+
+export interface AboutUs {
+  heading: string;
+  subheading: string;
+  description: string;
+  quoteText: string;
+  quoteAuthor: string;
+  stats: AboutStat[];
+  values: AboutValue[];
+}
+
 const DEFAULT_SERVICES: Service[] = [
   {
     id: "1",
@@ -198,6 +219,28 @@ const DEFAULT_LEADS: Lead[] = [
   },
 ];
 
+const DEFAULT_ABOUT: AboutUs = {
+  heading: "On iki yıldır aynı mahallede, aynı insanlarla.",
+  subheading: "On iki yıldır",
+  description:
+    "Insectron, Esenyurt'ta küçük bir ailedir. Reklam değil, komşu tavsiyesiyle büyüdük. Her eve, her işyerine kendi evimiz gibi giriyoruz; işimizi temiz, sessiz ve sözümüze sadık şekilde bitiriyoruz.",
+  quoteText:
+    "İşi alıp kaçmıyoruz. Bir hafta sonra arar, sorunu çözüldü mü diye sorarız. Çünkü buradan gitmiyoruz.",
+  quoteAuthor: "İbrahim — Kurucu",
+  stats: [
+    { n: "12", l: "yıl saha tecrübesi" },
+    { n: "500+", l: "tamamlanan iş" },
+    { n: "5.0", l: "Google puanı" },
+    { n: "30dk", l: "ortalama varış" },
+  ],
+  values: [
+    { n: "01", k: "Esenyurt'tan, Esenyurt için", v: "Mahalleyi, binaları, yöneticileri tanıyoruz. Aynı gün, çoğu zaman aynı saat içinde kapınızdayız." },
+    { n: "02", k: "Sözümüz sözleşmedir", v: "Saatinde geliriz, geç kalırsak haber veririz. İş bittikten sonra da telefon açık kalır." },
+    { n: "03", k: "Çocuk ve evcil dostu ürünler", v: "Sağlık Bakanlığı onaylı, düşük toksisiteli kimyasallar. Hangi ürünü neden seçtiğimizi açıklarız." },
+    { n: "04", k: "Yazılı garanti", v: "İşlem sonrası garanti belgesi veriyoruz. Süresi içinde tekrarlarsa ücretsiz tekrar geliriz." },
+  ],
+};
+
 // Helper to check and initialize data
 function initDB() {
   if (typeof window === "undefined") return;
@@ -213,6 +256,9 @@ function initDB() {
   }
   if (!localStorage.getItem("insectron_leads")) {
     localStorage.setItem("insectron_leads", JSON.stringify(DEFAULT_LEADS));
+  }
+  if (!localStorage.getItem("insectron_about")) {
+    localStorage.setItem("insectron_about", JSON.stringify(DEFAULT_ABOUT));
   }
 }
 
@@ -290,6 +336,17 @@ export const db = {
       .eq("id", id);
     if (error) { console.error(error); return false; }
     return true;
+  },
+
+  // About Us (Biz Kimiz)
+  getAboutUs(): AboutUs {
+    if (typeof window === "undefined") return DEFAULT_ABOUT;
+    const raw = localStorage.getItem("insectron_about");
+    return raw ? (JSON.parse(raw) as AboutUs) : DEFAULT_ABOUT;
+  },
+
+  saveAboutUs(about: AboutUs) {
+    localStorage.setItem("insectron_about", JSON.stringify(about));
   },
 
   // Services

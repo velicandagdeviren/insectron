@@ -347,19 +347,9 @@ function Services() {
 /* ───────── WHY US ───────── */
 
 function WhyUs() {
-  const stats = [
-    { n: "12", l: "yıl saha tecrübesi" },
-    { n: "500+", l: "tamamlanan iş" },
-    { n: "5.0", l: "Google puanı" },
-    { n: "30dk", l: "ortalama varış" },
-  ];
-
-  const values = [
-    { n: "01", k: "Esenyurt'tan, Esenyurt için", v: "Mahalleyi, binaları, yöneticileri tanıyoruz. Aynı gün, çoğu zaman aynı saat içinde kapınızdayız." },
-    { n: "02", k: "Sözümüz sözleşmedir", v: "Saatinde geliriz, geç kalırsak haber veririz. İş bittikten sonra da telefon açık kalır." },
-    { n: "03", k: "Çocuk ve evcil dostu ürünler", v: "Sağlık Bakanlığı onaylı, düşük toksisiteli kimyasallar. Hangi ürünü neden seçtiğimizi açıklarız." },
-    { n: "04", k: "Yazılı garanti", v: "İşlem sonrası garanti belgesi veriyoruz. Süresi içinde tekrarlarsa ücretsiz tekrar geliriz." },
-  ];
+  const about = db.getAboutUs();
+  const stats = about.stats;
+  const values = about.values;
 
   return (
     <section id="why" className="relative py-24 md:py-32 bg-secondary/40 overflow-hidden">
@@ -369,13 +359,10 @@ function WhyUs() {
             <span className="h-px w-8 bg-accent" /> Biz Kimiz
           </div>
           <h2 className="mt-5 font-display text-4xl md:text-6xl lg:text-7xl ink-text leading-[1.02]">
-            On iki yıldır <span className="serif-italic accent-text">aynı mahallede,</span>
-            <br className="hidden md:block" /> aynı insanlarla.
+            {about.heading}
           </h2>
           <p className="mt-7 text-lg text-foreground/75 leading-relaxed max-w-2xl">
-            Insectron, Esenyurt'ta küçük bir ailedir. Reklam değil, komşu tavsiyesiyle büyüdük.
-            Her eve, her işyerine kendi evimiz gibi giriyoruz; işimizi temiz, sessiz ve
-            sözümüze sadık şekilde bitiriyoruz.
+            {about.description}
           </p>
         </div>
 
@@ -394,15 +381,14 @@ function WhyUs() {
               <Quote className="absolute -top-2 -right-2 h-24 w-24 text-accent/15" />
               <div className="relative">
                 <p className="font-display text-2xl md:text-3xl ink-text leading-[1.2]">
-                  "İşi alıp kaçmıyoruz. Bir hafta sonra arar, sorunu çözüldü mü diye sorarız.
-                  <span className="serif-italic accent-text"> Çünkü buradan gitmiyoruz.</span>"
+                  "{about.quoteText}"
                 </p>
                 <div className="mt-6 flex items-center gap-3">
                   <div className="h-11 w-11 rounded-full bg-primary/10 text-primary flex items-center justify-center font-medium border border-primary/15">
-                    İ
+                    {about.quoteAuthor.charAt(0)}
                   </div>
                   <div>
-                    <div className="font-medium ink-text text-sm">İbrahim — Kurucu</div>
+                    <div className="font-medium ink-text text-sm">{about.quoteAuthor}</div>
                     <div className="text-xs text-muted-foreground mt-0.5">Insectron İlaçlama</div>
                   </div>
                 </div>
@@ -436,6 +422,7 @@ function WhyUs() {
     </section>
   );
 }
+
 
 /* ───────── PROCESS ───────── */
 

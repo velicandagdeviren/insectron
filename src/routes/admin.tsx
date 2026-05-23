@@ -26,7 +26,7 @@ import {
   Eye,
 } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from "recharts";
-import { db, Lead, Service, Review, FAQ } from "@/lib/db";
+import { db, Lead, Service, Review, FAQ, AboutUs, AboutStat, AboutValue } from "@/lib/db";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/admin")({
@@ -35,7 +35,7 @@ export const Route = createFileRoute("/admin")({
 
 function AdminPage() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [activeTab, setActiveTab] = useState<"dashboard" | "leads" | "reviews" | "services" | "faqs">("dashboard");
+  const [activeTab, setActiveTab] = useState<"dashboard" | "leads" | "reviews" | "services" | "faqs" | "about">("dashboard");
 
   // Load Auth state
   useEffect(() => {
@@ -88,6 +88,7 @@ function AdminPage() {
             {activeTab === "reviews" && <ReviewsTab />}
             {activeTab === "services" && <ServicesTab />}
             {activeTab === "faqs" && <FaqsTab />}
+            {activeTab === "about" && <AboutTab />}
           </motion.div>
         </AnimatePresence>
       </main>
@@ -203,6 +204,7 @@ function Sidebar({ activeTab, setActiveTab, onLogout }: SidebarProps) {
     { id: "reviews", label: "Müşteri Yorumları", icon: MessageSquare },
     { id: "services", label: "Hizmetlerimiz", icon: Wrench },
     { id: "faqs", label: "Sıkça Sorulanlar", icon: HelpCircle },
+    { id: "about", label: "Biz Kimiz", icon: User },
   ];
 
   return (
@@ -1239,6 +1241,181 @@ function FaqsTab() {
           </motion.div>
         </div>
       )}
+    </div>
+  );
+}
+
+/* ───────── TAB: BİZ KİMİZ (ABOUT) ───────── */
+
+function AboutTab() {
+  const [about, setAbout] = useState<AboutUs>(db.getAboutUs());
+  const [saving, setSaving] = useState(false);
+
+  function handleChange(field: keyof AboutUs, value: string) {
+    setAbout((prev) => ({ ...prev, [field]: value }));
+  }
+
+  function handleStatChange(index: number, key: keyof AboutStat, value: string) {
+    const stats = [...about.stats];
+    stats[index] = { ...stats[index], [key]: value };
+    setAbout((prev) => ({ ...prev, stats }));
+  }
+
+  function handleValueChange(index: number, key: keyof AboutValue, value: string) {
+    const values = [...about.values];
+    values[index] = { ...values[index], [key]: value };
+    setAbout((prev) => ({ ...prev, values }));
+  }
+
+  function handleSave() {
+    setSaving(true);
+    db.saveAboutUs(about);
+    setTimeout(() => {
+      setSaving(false);
+      toast.success("'Biz Kimiz' bölümü güncellendi.");
+    }, 400);
+  }
+
+  const inputClass =
+    "w-full rounded-lg bg-background border border-border px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20";
+  const labelClass = "block text-[10px] uppercase tracking-wider text-muted-foreground mb-1.5";
+
+  return (
+    <div className="space-y-8">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="font-display text-3xl ink-text">Biz Kimiz</h2>
+          <p className="text-xs text-muted-foreground mt-1">Ana sayfadaki 'Biz Kimiz' bölümünü düzenleyin.</p>
+        </div>
+        <button
+          onClick={handleSave}
+          disabled={saving}
+          className="flex items-center gap-2 bg-primary text-primary-foreground px-5 py-2.5 rounded-full text-sm font-semibold hover:opacity-90 transition disabled:opacity-60"
+        >
+          {saving ? <span className="animate-spin h-4 w-4 border-2 border-white/40 border-t-white rounded-full" /> : <Check className="h-4 w-4" />}
+          Kaydet
+        </button>
+      </div>
+
+      {/* Ana Metinler */}
+      <div className="paper-card rounded-2xl p-6 space-y-5">
+        <h3 className="font-display text-xl ink-text border-b border-border pb-3">Ana Metinler</h3>
+        <div>
+          <label className={labelClass}>Başlık</label>
+          <input
+            type="text"
+            value={about.heading}
+            onChange={(e) => handleChange("heading", e.target.value)}
+            className={inputClass}
+          />
+        </div>
+        <div>
+          <label className={labelClass}>Açıklama Metni</label>
+          <textarea
+            rows={3}
+            value={about.description}
+            onChange={(e) => handleChange("description", e.target.value)}
+            className={`${inputClass} resize-none leading-relaxed`}
+          />
+        </div>
+      </div>
+
+      {/* Alıntı Kartı */}
+      <div className="paper-card rounded-2xl p-6 space-y-5">
+        <h3 className="font-display text-xl ink-text border-b border-border pb-3">Alıntı Kartı</h3>
+        <div>
+          <label className={labelClass}>Alıntı Metni</label>
+          <textarea
+            rows={3}
+            value={about.quoteText}
+            onChange={(e) => handleChange("quoteText", e.target.value)}
+            className={`${inputClass} resize-none leading-relaxed`}
+          />
+        </div>
+        <div>
+          <label className={labelClass}>Alıntı Sahibi</label>
+          <input
+            type="text"
+            value={about.quoteAuthor}
+            onChange={(e) => handleChange("quoteAuthor", e.target.value)}
+            className={inputClass}
+            placeholder="İbrahim — Kurucu"
+          />
+        </div>
+      </div>
+
+      {/* İstatistikler */}
+      <div className="paper-card rounded-2xl p-6 space-y-5">
+        <h3 className="font-display text-xl ink-text border-b border-border pb-3">İstatistikler</h3>
+        <div className="grid sm:grid-cols-2 gap-4">
+          {about.stats.map((stat, i) => (
+            <div key={i} className="border border-border rounded-xl p-4 space-y-3">
+              <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">İstatistik {i + 1}</div>
+              <div>
+                <label className={labelClass}>Değer (örn. 12, 500+)</label>
+                <input
+                  type="text"
+                  value={stat.n}
+                  onChange={(e) => handleStatChange(i, "n", e.target.value)}
+                  className={inputClass}
+                />
+              </div>
+              <div>
+                <label className={labelClass}>Etiket (örn. yıl saha tecrübesi)</label>
+                <input
+                  type="text"
+                  value={stat.l}
+                  onChange={(e) => handleStatChange(i, "l", e.target.value)}
+                  className={inputClass}
+                />
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Değer Kartları */}
+      <div className="paper-card rounded-2xl p-6 space-y-5">
+        <h3 className="font-display text-xl ink-text border-b border-border pb-3">Değer Kartları</h3>
+        <div className="space-y-4">
+          {about.values.map((val, i) => (
+            <div key={i} className="border border-border rounded-xl p-4 space-y-3">
+              <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Kart {i + 1}</div>
+              <div>
+                <label className={labelClass}>Başlık</label>
+                <input
+                  type="text"
+                  value={val.k}
+                  onChange={(e) => handleValueChange(i, "k", e.target.value)}
+                  className={inputClass}
+                />
+              </div>
+              <div>
+                <label className={labelClass}>Açıklama</label>
+                <textarea
+                  rows={2}
+                  value={val.v}
+                  onChange={(e) => handleValueChange(i, "v", e.target.value)}
+                  className={`${inputClass} resize-none leading-relaxed`}
+                />
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Save bottom */}
+      <div className="flex justify-end">
+        <button
+          onClick={handleSave}
+          disabled={saving}
+          className="flex items-center gap-2 bg-primary text-primary-foreground px-6 py-3 rounded-full text-sm font-semibold hover:opacity-90 transition disabled:opacity-60"
+        >
+          {saving ? <span className="animate-spin h-4 w-4 border-2 border-white/40 border-t-white rounded-full" /> : <Check className="h-4 w-4" />}
+          Değişiklikleri Kaydet
+        </button>
+      </div>
     </div>
   );
 }
